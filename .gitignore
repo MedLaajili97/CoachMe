@@ -1,0 +1,23 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Environment — never commit real secrets
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backend build
+backend/target/
+
+# Frontend build
+frontend/dist/
+frontend/node_modules/
+
+# Nginx certs — provisioned at deploy time
+nginx/certs/*.pem
+nginx/certs/*.crt
+nginx/certs/*.key
