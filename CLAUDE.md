@@ -4,6 +4,14 @@
 > Read it fully before writing any code. Never deviate from it without
 > updating it first.
 
+> **Progress tracking:** All phases and issues are tracked in
+> `C:\Users\mli\.claude\projects\C---source-CoachMe\memory\project_issues.md`.
+> Always read that file at the start of each session to know where we left off,
+> and mark issues `[x]` as soon as they are completed.
+
+> **Git policy:** Never run git commands (commit, push, branch, close issues).
+> The user manages all git operations themselves.
+
 ---
 
 ## 1. Project Overview
