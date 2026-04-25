@@ -49,7 +49,7 @@ A multi-tenant private coaching SaaS.
 │   │   ├── controller/       # REST controllers (public + tenant-scoped)
 │   │   ├── service/          # Business logic
 │   │   ├── repository/       # JPA repositories
-│   │   ├── model/            # JPA entities
+│   │   ├── entity/           # JPA entities
 │   │   ├── dto/              # Request/Response DTOs only (no entities in API)
 │   │   ├── tenant/           # Tenant context: resolver, interceptor, provider
 │   │   ├── security/         # JWT filter, token service, user details
