@@ -9,6 +9,9 @@
 > Always read that file at the start of each session to know where we left off,
 > and mark issues `[x]` as soon as they are completed.
 
+> **Git policy:** Never run git commands (commit, push, branch, close issues).
+> The user manages all git operations themselves.
+
 ---
 
 ## 1. Project Overview
