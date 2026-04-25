@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: coachapp
+
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/public
+    schemas: public
+    baseline-on-migrate: false
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USER}
+    password: ${MAIL_PASS}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiry-ms: ${JWT_EXPIRY_MS}
+
+app:
+  domain: ${APP_DOMAIN}
+
+springdoc:
+  api-docs:
+    path: /api/api-docs
+  swagger-ui:
+    path: /api/swagger-ui.html
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
