@@ -1,18 +1,24 @@
 package com.coachapp.service;
 
 import com.coachapp.dto.auth.AuthResponse;
+import com.coachapp.dto.auth.ClientRegisterRequest;
 import com.coachapp.dto.auth.CoachRegisterRequest;
 import com.coachapp.dto.auth.LoginRequest;
+import com.coachapp.entity.Invitation;
 import com.coachapp.entity.RefreshToken;
 import com.coachapp.entity.Tenant;
 import com.coachapp.entity.User;
+import com.coachapp.exception.InvitationNotFoundException;
 import com.coachapp.exception.TenantAlreadyExistsException;
 import com.coachapp.exception.UserAlreadyExistsException;
+import com.coachapp.model.Client;
+import com.coachapp.repository.ClientRepository;
 import com.coachapp.repository.RefreshTokenRepository;
 import com.coachapp.repository.TenantRepository;
 import com.coachapp.repository.UserRepository;
 import com.coachapp.security.CustomUserDetails;
 import com.coachapp.security.JwtService;
+import com.coachapp.tenant.TenantContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -42,10 +48,12 @@ public class AuthService {
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final TenantProvisioningService tenantProvisioningService;
+    private final InvitationService invitationService;
 
     @Transactional
     public AuthResponse registerCoach(CoachRegisterRequest request, HttpServletResponse response) {
@@ -74,6 +82,36 @@ public class AuthService {
         tenantProvisioningService.provision(tenant.getId().toString());
 
         CustomUserDetails userDetails = new CustomUserDetails(user, request.subdomain());
+        return issueTokens(userDetails, response);
+    }
+
+    @Transactional
+    public AuthResponse registerClient(ClientRegisterRequest request, HttpServletResponse response) {
+        Invitation invitation = invitationService.validateAndConsume(request.token());
+
+        String tenantSubdomain = TenantContext.get();
+        Tenant tenant = tenantRepository.findBySubdomain(tenantSubdomain)
+                .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantSubdomain));
+        if (!invitation.getTenantId().equals(tenant.getId())) {
+            throw new InvitationNotFoundException();
+        }
+
+        if (userRepository.findByEmail(invitation.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException(invitation.getEmail());
+        }
+
+        User user = User.builder()
+                .email(invitation.getEmail())
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .name(request.name())
+                .role(User.Role.CLIENT)
+                .build();
+        userRepository.save(user);
+
+        // TenantContext is already set by TenantInterceptor → routes to tenant schema
+        clientRepository.save(Client.builder().userId(user.getId()).build());
+
+        CustomUserDetails userDetails = new CustomUserDetails(user, tenantSubdomain);
         return issueTokens(userDetails, response);
     }
 
@@ -151,8 +189,12 @@ public class AuthService {
                     .map(Tenant::getSubdomain)
                     .orElseThrow(() -> new IllegalStateException("No tenant found for coach: " + userId));
         }
-        // CLIENT tenantId resolution is handled in the invite flow — see #14
-        throw new IllegalStateException("Client login not supported via this endpoint");
+        // CLIENT: tenant comes from X-Tenant-ID header (set by TenantInterceptor on subdomain requests)
+        String subdomain = TenantContext.get();
+        if (subdomain == null) {
+            throw new IllegalStateException("No tenant context for client — missing X-Tenant-ID header");
+        }
+        return subdomain;
     }
 
     private void setRefreshCookie(HttpServletResponse response, String rawToken) {

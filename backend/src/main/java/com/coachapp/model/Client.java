@@ -1,4 +1,4 @@
-package com.coachapp.entity;
+package com.coachapp.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,30 +8,29 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users", schema = "public")
+@Table(name = "clients")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class Client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
-
-    @Column
-    private String name;
+    // Plain UUID — cross-schema FK not enforced by JPA
+    @Column(name = "user_id", nullable = false, unique = true)
+    private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Role role;
+    @Builder.Default
+    private Status status = Status.ACTIVE;
+
+    @Column(name = "joined_at", nullable = false)
+    private Instant joinedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -42,11 +41,13 @@ public class User {
 
     @PrePersist
     void prePersist() {
-        createdAt = Instant.now();
-        updatedAt = createdAt;
+        Instant now = Instant.now();
+        joinedAt = now;
+        createdAt = now;
+        updatedAt = now;
     }
 
-    public enum Role {
-        COACH, CLIENT
+    public enum Status {
+        ACTIVE, INACTIVE, ARCHIVED
     }
 }
