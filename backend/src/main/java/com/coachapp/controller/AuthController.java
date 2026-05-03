@@ -2,6 +2,7 @@ package com.coachapp.controller;
 
 import com.coachapp.dto.ApiResponse;
 import com.coachapp.dto.auth.AuthResponse;
+import com.coachapp.dto.auth.ClientRegisterRequest;
 import com.coachapp.dto.auth.CoachRegisterRequest;
 import com.coachapp.dto.auth.LoginRequest;
 import com.coachapp.dto.invite.VerifyInviteRequest;
@@ -54,6 +55,13 @@ public class AuthController {
     @PostMapping("/verify-invite")
     public ApiResponse<VerifyInviteResponse> verifyInvite(@Valid @RequestBody VerifyInviteRequest request) {
         return ApiResponse.success(invitationService.verifyInvite(request.token()));
+    }
+
+    @PostMapping("/register/client")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<AuthResponse> registerClient(@Valid @RequestBody ClientRegisterRequest request,
+                                                    HttpServletResponse response) {
+        return ApiResponse.success(authService.registerClient(request, response));
     }
 
     @PostMapping("/logout")

@@ -68,6 +68,13 @@ public class InvitationService {
         return new VerifyInviteResponse(invitation.getId(), invitation.getEmail(), tenant.getSubdomain());
     }
 
+    @Transactional
+    public Invitation validateAndConsume(String rawToken) {
+        Invitation invitation = findValidPendingInvitation(rawToken);
+        invitation.setStatus(Invitation.Status.ACCEPTED);
+        return invitationRepository.save(invitation);
+    }
+
     private Invitation findValidPendingInvitation(String rawToken) {
         Invitation invitation = invitationRepository.findByTokenHash(hashToken(rawToken))
                 .orElseThrow(InvitationNotFoundException::new);
