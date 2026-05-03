@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
         return ApiResponse.failure("INVITATION_ALREADY_USED", ex.getMessage());
     }
 
+    @ExceptionHandler(InvitationAlreadyPendingException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<?> handleInvitationAlreadyPending(InvitationAlreadyPendingException ex) {
+        return ApiResponse.failure("INVITATION_ALREADY_PENDING", ex.getMessage());
+    }
+
     @ExceptionHandler(TenantAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiResponse<?> handleTenantAlreadyExists(TenantAlreadyExistsException ex) {

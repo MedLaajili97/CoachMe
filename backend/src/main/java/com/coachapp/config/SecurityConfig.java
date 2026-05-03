@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/swagger-ui.html", "/api/swagger-ui/**", "/api/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/coach/**").hasRole("COACH")
+                        .requestMatchers("/api/v1/client/**").hasRole("CLIENT")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
