@@ -1,9 +1,13 @@
 package com.coachapp.service;
 
 import com.coachapp.dto.invite.InviteResponse;
+import com.coachapp.dto.invite.VerifyInviteResponse;
 import com.coachapp.entity.Invitation;
 import com.coachapp.entity.Tenant;
 import com.coachapp.exception.InvitationAlreadyPendingException;
+import com.coachapp.exception.InvitationAlreadyUsedException;
+import com.coachapp.exception.InvitationExpiredException;
+import com.coachapp.exception.InvitationNotFoundException;
 import com.coachapp.repository.InvitationRepository;
 import com.coachapp.repository.TenantRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +58,27 @@ public class InvitationService {
                 invitation.getEmail(),
                 invitation.getStatus().name(),
                 invitation.getExpiresAt());
+    }
+
+    @Transactional(readOnly = true)
+    public VerifyInviteResponse verifyInvite(String rawToken) {
+        Invitation invitation = findValidPendingInvitation(rawToken);
+        Tenant tenant = tenantRepository.findById(invitation.getTenantId())
+                .orElseThrow(() -> new IllegalStateException("Tenant not found for invitation"));
+        return new VerifyInviteResponse(invitation.getId(), invitation.getEmail(), tenant.getSubdomain());
+    }
+
+    private Invitation findValidPendingInvitation(String rawToken) {
+        Invitation invitation = invitationRepository.findByTokenHash(hashToken(rawToken))
+                .orElseThrow(InvitationNotFoundException::new);
+        if (invitation.getStatus() == Invitation.Status.ACCEPTED) {
+            throw new InvitationAlreadyUsedException();
+        }
+        if (invitation.getStatus() != Invitation.Status.PENDING
+                || invitation.getExpiresAt().isBefore(Instant.now())) {
+            throw new InvitationExpiredException();
+        }
+        return invitation;
     }
 
     private String hashToken(String token) {

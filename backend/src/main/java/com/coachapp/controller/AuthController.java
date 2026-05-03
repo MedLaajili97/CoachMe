@@ -4,7 +4,10 @@ import com.coachapp.dto.ApiResponse;
 import com.coachapp.dto.auth.AuthResponse;
 import com.coachapp.dto.auth.CoachRegisterRequest;
 import com.coachapp.dto.auth.LoginRequest;
+import com.coachapp.dto.invite.VerifyInviteRequest;
+import com.coachapp.dto.invite.VerifyInviteResponse;
 import com.coachapp.service.AuthService;
+import com.coachapp.service.InvitationService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final InvitationService invitationService;
 
     @PostMapping("/register/coach")
     @ResponseStatus(HttpStatus.CREATED)
@@ -45,6 +49,11 @@ public class AuthController {
             throw new BadCredentialsException("Missing refresh token");
         }
         return ApiResponse.success(authService.refresh(refreshToken, response));
+    }
+
+    @PostMapping("/verify-invite")
+    public ApiResponse<VerifyInviteResponse> verifyInvite(@Valid @RequestBody VerifyInviteRequest request) {
+        return ApiResponse.success(invitationService.verifyInvite(request.token()));
     }
 
     @PostMapping("/logout")
